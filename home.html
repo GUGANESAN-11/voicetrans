@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SBA INFO SOLUTION</title>
+
+<style>
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-image: url('https://mtkvxmybgaqksllpyijp.supabase.co/storage/v1/object/public/Gugan/3409297.jpg?t=2024-05-10T11%3A45%3A06.900Z');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  #container {
+    text-align: center;
+  }
+  button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 5px;
+  }
+  h1{
+    color:aliceblue;
+  }
+</style>
+</head>
+<body>
+
+<div id="container">
+  <h1>SBA INFO SOLUTION</h1>
+  <button onclick="navigateTo('tamil')">Tamil</button>
+  <button onclick="navigateTo('english')">English</button>
+  <button onclick="navigateTo('hindi')">Hindi</button>
+</div>
+
+<script>
+function navigateTo(language) {
+  switch(language) {
+    case 'tamil':
+      window.location.href = 'Tamil1.html';
+      break;
+    case 'english':
+      window.location.href = 'english.html';
+      break;
+    case 'hindi':
+      window.location.href = 'Hindi.html';
+      break;
+    default:
+      console.error('Invalid language selected');
+  }
+}
+</script>
+
+</body>
+</html>

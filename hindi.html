@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Speech-to-Text Conversion using IBM Watson (Hindi)</title>
+<style>
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    background-image: url('https://mtkvxmybgaqksllpyijp.supabase.co/storage/v1/object/public/Gugan/3409297.jpg?t=2024-05-10T11%3A45%3A06.900Z');
+
+  }
+  #container {
+    text-align: center;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1);
+    position: relative; /* Position relative for absolute positioning of logos */
+  }
+  h1 {
+    color: #333;
+    margin-top: 0; /* Add this line to reset the default margin */
+    margin-left: 120px; /* Adjust the margin based on the width of your left logo */
+    margin-right: 120px; /* Adjust the margin based on the width of your right logo */
+  }
+  button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 5px;
+  }
+  button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  textarea {
+    width: 100%;
+    height: 200px;
+    margin-top: 20px;
+    resize: none;
+    border-radius: 5px;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+  }
+  canvas {
+    width: 100%;
+    height: 100px;
+    background-color: #f0f0f0;
+    margin-top: 20px;
+    border-radius: 5px;
+  }
+  .logo {
+    max-width: 100px; /* Adjust the width as needed */
+    position: absolute; /* Position absolute for exact placement */
+    top: 10px; /* Adjust as needed */
+  }
+  .logo.left {
+    left: 10px; /* Adjust as needed */
+  }
+  .logo.right {
+    right: 10px; /* Adjust as needed */
+  }
+</style>
+</head>
+<body>
+
+<div id="container">
+  <img src="https://mtkvxmybgaqksllpyijp.supabase.co/storage/v1/object/public/Gugan/01.png?t=2024-05-10T10%3A02%3A05.888Z" class="logo left"> <!-- Left Logo -->
+  <img src="https://mtkvxmybgaqksllpyijp.supabase.co/storage/v1/object/public/Gugan/02.jpg" class="logo right"> <!-- Right Logo -->
+    <h1>Live Speech-to-Text Conversion using IBM Watson (Hindi)</h1>
+
+  <div>
+    <button id="startButton">Start Recording</button>
+    <button id="stopButton" disabled>Stop Recording</button>
+  </div>
+
+  <div>
+    <textarea id="liveTranscription" rows="4" cols="50" readonly></textarea>
+  </div>
+  
+  <canvas id="audioCanvas"></canvas>
+</div>
+
+<script>
+const startButton = document.getElementById('startButton');
+const stopButton = document.getElementById('stopButton');
+const liveTranscription = document.getElementById('liveTranscription');
+const audioCanvas = document.getElementById('audioCanvas');
+const canvasCtx = audioCanvas.getContext('2d');
+
+let recognition;
+let audioContext;
+let analyser;
+let dataArray;
+let animationId;
+
+function startRecording() {
+  startButton.disabled = true;
+  stopButton.disabled = false;
+  liveTranscription.value = '';
+
+  // Set up audio context and microphone input
+  audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  analyser = audioContext.createAnalyser();
+  dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      const microphone = audioContext.createMediaStreamSource(stream);
+      microphone.connect(analyser);
+
+      // Start visualizing audio data
+      animationId = visualize();
+
+      // Set up speech recognition
+      recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
+      recognition.lang = 'hi-IN'; // Hindi language code
+      recognition.interimResults = true;
+      recognition.continuous = true;
+
+      recognition.onresult = event => {
+        let interimTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            liveTranscription.value += event.results[i][0].transcript + ' ';
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+      };
+
+      recognition.onerror = event => {
+        console.error('Speech recognition error:', event.error);
+      };
+
+      recognition.start();
+    })
+    .catch(error => {
+      console.error('Error accessing microphone:', error);
+    });
+}
+
+function stopRecording() {
+  startButton.disabled = false;
+  stopButton.disabled = true;
+  recognition.stop();
+
+  // Stop visualizing audio data
+  cancelAnimationFrame(animationId);
+}
+
+startButton.addEventListener('click', startRecording);
+
+stopButton.addEventListener('click', stopRecording);
+
+function visualize() {
+  // Clear canvas
+  canvasCtx.clearRect(0, 0, audioCanvas.width, audioCanvas.height);
+
+  // Get audio data and draw visualization
+  analyser.getByteTimeDomainData(dataArray);
+  canvasCtx.beginPath();
+  const sliceWidth = audioCanvas.width * 1.0 / dataArray.length;
+  let x = 0;
+  for(let i = 0; i < dataArray.length; i++) {
+    const v = dataArray[i] / 128.0;
+    const y = v * audioCanvas.height / 2;
+    if(i === 0) {
+      canvasCtx.moveTo(x, y);
+    } else {
+      canvasCtx.lineTo(x, y);
+    }
+    x += sliceWidth;
+  }
+  canvasCtx.lineTo(audioCanvas.width, audioCanvas.height / 2);
+  canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+  canvasCtx.lineWidth = 2;
+  canvasCtx.stroke();
+
+  // Continue visualizing
+  return requestAnimationFrame(visualize);
+}
+
+const apiKey = 'FL2nWrD69WEz1J_P9c4Z2IaWXdPUodKvJXyowYoOkbE0';
+const apiUrl = 'https://api.us-south.speech-to-text.watson.cloud.ibm.com/instances/9c5cbeda-0cad-4f48-a55b-13e57908860c';
+</script>
+
+</body>
+</html>
